@@ -1,0 +1,14 @@
+// Created a dev container to support nodejs 18. by default server has nodejs 20
+{
+    "name": "Node.js",
+    // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+    "image": "mcr.microsoft.com/devcontainers/javascript-node:0-18-bullseye",
+    "features": {
+      "ghcr.io/devcontainers-contrib/features/jshint:2": {}
+    },
+    "customizations": {
+    "node": "18.18"  // Change "18" to the desired Node.js version
+  }
+  
+    
+  }
