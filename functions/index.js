@@ -141,4 +141,117 @@ app.post("/login", async (req, res) => {
   }
 });
 
+// ----------------------------------- CREATE POST ---------------------------------
+
+app.post("/createPost", async (req, res) => {
+  // check user validity to send data
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({
+      message: "No authentication token provided",
+      data: {},
+      error: "Unauthorized",
+    });
+  }
+
+  const token = authHeader.split(" ")[1];
+
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    const userId = decodedToken.uid;
+
+    // check user is in firebase db collection
+    const userDoc = await admin
+      .firestore()
+      .collection("Users")
+      .doc(userId)
+      .get();
+    if (!userDoc.exists) {
+      return res.status(403).json({
+        message: "User not found in database",
+        data: {},
+        error: "Unauthorized",
+      });
+    }
+
+    const form = new formidable.IncomingForm({ multiples: true });
+
+    form.parse(req, async (err, fields, files) => {
+      if (err) {
+        return res.status(400).json({
+          message: "There was an error parsing the files",
+          data: {},
+          error: err,
+        });
+      }
+
+      let uuid = UUID();
+      var downLoadPath =
+        "https://firebasestorage.googleapis.com/v0/b/emerald-eon-438919-g7.appspot.com/o/";
+
+      const profileImage = files.profileImage;
+      let imageUrl;
+
+      // Generate a new document ID in the Pets collection
+      const petDocId = userRef.doc().id;
+      const bucket = storage.bucket("gs://emerald-eon-438919-g7.appspot.com");
+
+      try {
+        if (profileImage && profileImage.size > 0) {
+          const imageResponse = await bucket.upload(profileImage.path, {
+            destination: `pets/${profileImage.name}`,
+            resumable: true,
+            metadata: {
+              metadata: {
+                firebaseStorageDownloadTokens: uuid,
+              },
+            },
+          });
+
+          imageUrl =
+            downLoadPath +
+            encodeURIComponent(imageResponse[0].name) +
+            "?alt=media&token=" +
+            uuid;
+        }
+
+        // Create the pet document mapping with users Id
+        const petData = {
+          userId: userId,
+          name: fields.name,
+          age: fields.age,
+          weight: fields.weight,
+          title: fields.title,
+          location: fields.location,
+          gender: fields.gender,
+          description: fields.description,
+          breed: fields.breed,
+          profileImage: profileImage && profileImage.size > 0 ? imageUrl : "",
+        };
+
+        // Save data to the store
+        await userRef.doc(petDocId).set(petData);
+
+        res.status(200).json({
+          message: "Pet post created successfully",
+          data: petData,
+          error: {},
+        });
+      } catch (uploadError) {
+        res.status(500).json({
+          message: "Error uploading image or saving data",
+          data: {},
+          error: uploadError.message,
+        });
+      }
+    });
+  } catch (authError) {
+    res.status(401).json({
+      message: "Invalid or expired authentication token",
+      data: {},
+      error: authError.message,
+    });
+  }
+});
+
 exports.api = functions.https.onRequest(app);
