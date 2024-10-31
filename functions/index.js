@@ -254,4 +254,62 @@ app.post("/createPost", async (req, res) => {
   }
 });
 
+// implement update api
+
+// ----------------------------------- GET POST BY POST ID ---------------------------------
+
+app.get("/getPostById/:postId", async (req, res) => {
+  const postId = req.params.postId;
+
+  // Verify auth token
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({
+      message: "No authentication token provided",
+      data: {},
+      error: "Unauthorized",
+    });
+  }
+
+  const token = authHeader.split(" ")[1];
+
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    const userId = decodedToken.uid;
+
+    const postDoc = await userRef.doc(postId).get();
+
+    if (!postDoc.exists) {
+      return res.status(404).json({
+        message: "Post not found",
+        data: {},
+        error: "Not Found",
+      });
+    }
+
+    const postData = postDoc.data();
+
+    // check users id with post id
+    if (postData.userId !== userId) {
+      return res.status(403).json({
+        message: "You don't have permission to access this post",
+        data: {},
+        error: "Forbidden",
+      });
+    }
+
+    res.status(200).json({
+      message: "Post retrieved successfully",
+      data: postData,
+      error: {},
+    });
+  } catch (authError) {
+    res.status(401).json({
+      message: "Invalid or expired authentication token",
+      data: {},
+      error: authError.message,
+    });
+  }
+});
+
 exports.api = functions.https.onRequest(app);
