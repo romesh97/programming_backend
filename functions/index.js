@@ -256,6 +256,134 @@ app.post("/createPost", async (req, res) => {
 
 // implement update api
 
+// ----------------------------------- UPDATE POST ---------------------------------
+
+app.put("/updatePost/:petId", async (req, res) => {
+  const petId = req.params.petId;
+
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({
+      message: "No authentication token provided",
+      data: {},
+      error: "Unauthorized",
+    });
+  }
+
+  const token = authHeader.split(" ")[1];
+
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    const userId = decodedToken.uid;
+
+    // Check if pet post exists and belongs to the user
+    const petDoc = await userRef.doc(petId).get();
+
+    if (!petDoc.exists) {
+      return res.status(404).json({
+        message: "Pet post not found",
+        data: {},
+        error: "Not Found",
+      });
+    }
+
+    const petData = petDoc.data();
+  
+
+    const form = new formidable.IncomingForm({ multiples: true });
+
+    form.parse(req, async (err, fields, files) => {
+      if (err) {
+        return res.status(400).json({
+          message: "There was an error parsing the files",
+          data: {},
+          error: err,
+        });
+      }
+
+      try {
+        let updateData = {};
+
+        // Update text fields 
+        if (fields.name) updateData.name = fields.name;
+        if (fields.age) updateData.age = fields.age;
+        if (fields.weight) updateData.weight = fields.weight;
+        if (fields.title) updateData.title = fields.title;
+        if (fields.location) updateData.age = fields.location;
+        if (fields.gender) updateData.age = fields.gender;
+        if (fields.description) updateData.description = fields.description;
+        if (fields.breed) updateData.breed = fields.breed;
+
+        // provides public URL
+        const profileImage = files.profileImage;
+        if (profileImage && profileImage.size > 0) {
+          let uuid = UUID();
+          var downLoadPath =
+            "https://firebasestorage.googleapis.com/v0/b/emerald-eon-438919-g7.appspot.com/o/";
+          const bucket = storage.bucket(
+            "gs://emerald-eon-438919-g7.appspot.com"
+          );
+
+          // Delete old image if exists
+          if (petData.profileImage) {
+            const oldImagePath = petData.profileImage
+              .split("?")[0]
+              .split("/o/")[1];
+            try {
+              await bucket.file(decodeURIComponent(oldImagePath)).delete();
+            } catch (deleteError) {
+              console.log("Error deleting old image:", deleteError);
+              
+            }
+          }
+
+          // Upload new image
+          const imageResponse = await bucket.upload(profileImage.path, {
+            destination: `pets/${profileImage.name}`,
+            resumable: true,
+            metadata: {
+              metadata: {
+                firebaseStorageDownloadTokens: uuid,
+              },
+            },
+          });
+
+          updateData.profileImage =
+            downLoadPath +
+            encodeURIComponent(imageResponse[0].name) +
+            "?alt=media&token=" +
+            uuid;
+        }
+
+        // Update petData
+        await userRef.doc(petId).update(updateData);
+
+        // Get the updated document
+        const updatedPetDoc = await userRef.doc(petId).get();
+        const updatedPetData = updatedPetDoc.data();
+
+        res.status(200).json({
+          message: "Pet post updated successfully",
+          data: updatedPetData,
+          error: {},
+        });
+      } catch (updateError) {
+        res.status(500).json({
+          message: "Error updating pet post",
+          data: {},
+          error: updateError.message,
+        });
+      }
+    });
+  } catch (authError) {
+    res.status(401).json({
+      message: "Invalid or expired authentication token",
+      data: {},
+      error: authError.message,
+    });
+  }
+});
+
 // ----------------------------------- GET POST BY POST ID ---------------------------------
 
 app.get("/getPostById/:postId", async (req, res) => {
@@ -289,14 +417,14 @@ app.get("/getPostById/:postId", async (req, res) => {
 
     const postData = postDoc.data();
 
-    // check users id with post id
-    if (postData.userId !== userId) {
-      return res.status(403).json({
-        message: "You don't have permission to access this post",
-        data: {},
-        error: "Forbidden",
-      });
-    }
+    // // check users id with post id
+    // if (postData.userId !== userId) {
+    //   return res.status(403).json({
+    //     message: "You don't have permission to access this post",
+    //     data: {},
+    //     error: "Forbidden",
+    //   });
+    // }
 
     res.status(200).json({
       message: "Post retrieved successfully",
