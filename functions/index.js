@@ -325,17 +325,17 @@ app.put("/updatePost/:petId", async (req, res) => {
           );
 
           // Delete old image if exists
-          if (petData.profileImage) {
-            const oldImagePath = petData.profileImage
-              .split("?")[0]
-              .split("/o/")[1];
-            try {
-              await bucket.file(decodeURIComponent(oldImagePath)).delete();
-            } catch (deleteError) {
-              console.log("Error deleting old image:", deleteError);
+          // if (petData.profileImage) {
+          //   const oldImagePath = petData.profileImage
+          //     .split("?")[0]
+          //     .split("/o/")[1];
+          //   try {
+          //     await bucket.file(decodeURIComponent(oldImagePath)).delete();
+          //   } catch (deleteError) {
+          //     console.log("Error deleting old image:", deleteError);
               
-            }
-          }
+          //   }
+          // }
 
           // Upload new image
           const imageResponse = await bucket.upload(profileImage.path, {
