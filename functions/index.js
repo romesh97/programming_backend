@@ -440,4 +440,26 @@ app.get("/getPostById/:postId", async (req, res) => {
   }
 });
 
+// --------------------------------------GET ALL POSTS----------------------------------------
+
+app.get("/getAllPosts", async (req, res) => {
+  try {
+    // Fetch all posts
+    const postQuerySnapshot = await userRef.get();
+    const posts = postQuerySnapshot.docs.map((doc) => doc.data());
+
+    res.status(200).json({
+      message: "Posts retrieved successfully",
+      data: posts,
+      error: {},
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error retrieving posts",
+      data: [],
+      error: error.message,
+    });
+  }
+});
+
 exports.api = functions.https.onRequest(app);
