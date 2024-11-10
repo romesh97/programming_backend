@@ -11,7 +11,7 @@ const app = express();
 app.use(cors({ origin: true }));
 app.use(
   cors({
-    origin: ["https://zany-umbrella-xqq4w9xvr6p3v9xv-3000.app.github.dev"],
+    origin: ["https://damp-cemetery-xqq4w9xvr673vggx.github.dev/"],
   })
 );
 app.use(express.json({ limit: "50mb", extended: true }));
