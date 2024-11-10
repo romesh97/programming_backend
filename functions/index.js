@@ -289,7 +289,7 @@ app.put("/updatePost/:petId", async (req, res) => {
 
     const petData = petDoc.data();
   
-
+// TODO: check with multi media upload part later
     const form = new formidable.IncomingForm({ multiples: true });
 
     form.parse(req, async (err, fields, files) => {
@@ -390,14 +390,14 @@ app.get("/getPostById/:postId", async (req, res) => {
   const postId = req.params.postId;
 
   // Verify auth token
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({
-      message: "No authentication token provided",
-      data: {},
-      error: "Unauthorized",
-    });
-  }
+  // const authHeader = req.headers.authorization;
+  // if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  //   return res.status(401).json({
+  //     message: "No authentication token provided",
+  //     data: {},
+  //     error: "Unauthorized",
+  //   });
+  // }
 
   const token = authHeader.split(" ")[1];
 
@@ -457,6 +457,50 @@ app.get("/getAllPosts", async (req, res) => {
     res.status(500).json({
       message: "Error retrieving posts",
       data: [],
+      error: error.message,
+    });
+  }
+});
+
+// --------------------------------------GET ALL POSTS BY USER ID----------------------------------------
+
+app.get("/getPosts/:userId", async (req, res) => {
+  const userId = req.params.userId;
+
+  try {
+    const postQuerySnapshot = await userRef.where("userId", "==", userId).get();
+    const posts = postQuerySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    res.status(200).json({
+      message: "Posts retrieved successfully",
+      data: posts,
+      error: {},
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error retrieving posts",
+      data: [],
+      error: error.message,
+    });
+  }
+});
+
+// --------------------------------------DELETE POST FROM POST ID----------------------------------------
+
+app.delete("/deletePost/:postId", async (req, res) => {
+  const postId = req.params.postId;
+  try {
+    await userRef.doc(postId).delete();
+    res.status(200).json({
+      message: "Post deleted successfully",
+      error: {},
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error deleting post",
       error: error.message,
     });
   }
