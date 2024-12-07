@@ -309,8 +309,8 @@ app.put("/updatePost/:petId", async (req, res) => {
         if (fields.age) updateData.age = fields.age;
         if (fields.weight) updateData.weight = fields.weight;
         if (fields.title) updateData.title = fields.title;
-        if (fields.location) updateData.age = fields.location;
-        if (fields.gender) updateData.age = fields.gender;
+        if (fields.location) updateData.location = fields.location;
+        if (fields.gender) updateData.gender = fields.gender;
         if (fields.description) updateData.description = fields.description;
         if (fields.breed) updateData.breed = fields.breed;
 
