@@ -390,14 +390,14 @@ app.get("/getPostById/:postId", async (req, res) => {
   const postId = req.params.postId;
 
   // Verify auth token
-  // const authHeader = req.headers.authorization;
-  // if (!authHeader || !authHeader.startsWith("Bearer ")) {
-  //   return res.status(401).json({
-  //     message: "No authentication token provided",
-  //     data: {},
-  //     error: "Unauthorized",
-  //   });
-  // }
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({
+      message: "No authentication token provided",
+      data: {},
+      error: "Unauthorized",
+    });
+  }
 
   const token = authHeader.split(" ")[1];
 
