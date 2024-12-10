@@ -224,7 +224,7 @@ app.post("/createPost", async (req, res) => {
           title: fields.title,
           location: fields.location,
           gender: fields.gender,
-          description: fields.description,
+          contact: fields.contact,
           breed: fields.breed,
           profileImage: profileImage && profileImage.size > 0 ? imageUrl : "",
         };
@@ -311,7 +311,7 @@ app.put("/updatePost/:petId", async (req, res) => {
         if (fields.title) updateData.title = fields.title;
         if (fields.location) updateData.location = fields.location;
         if (fields.gender) updateData.gender = fields.gender;
-        if (fields.description) updateData.description = fields.description;
+        if (fields.contact) updateData.contact = fields.contact;
         if (fields.breed) updateData.breed = fields.breed;
 
         // provides public URL
