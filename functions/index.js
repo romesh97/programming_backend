@@ -418,13 +418,13 @@ app.get("/getPostById/:postId", async (req, res) => {
     const postData = postDoc.data();
 
     // // check users id with post id
-    // if (postData.userId !== userId) {
-    //   return res.status(403).json({
-    //     message: "You don't have permission to access this post",
-    //     data: {},
-    //     error: "Forbidden",
-    //   });
-    // }
+    if (postData.userId !== userId) {
+      return res.status(403).json({
+        message: "You don't have permission to access this post",
+        data: {},
+        error: "Forbidden",
+      });
+    }
 
     res.status(200).json({
       message: "Post retrieved successfully",
